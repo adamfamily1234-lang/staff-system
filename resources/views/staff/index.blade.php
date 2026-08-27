@@ -11,9 +11,9 @@
 
     <h1>Senarai Staf</h1>
 
-    <a href="#">
-        + Tambah Staf
-    </a>
+    <a href="{{ route('staff.create') }}">
+    + Tambah Staf
+</a>
 
     <hr>
 
@@ -29,6 +29,7 @@
                     <th>Gred</th>
                     <th>Bahagian</th>
                     <th>Unit</th>
+                    <th>Tindakan</th>
                 </tr>
             </thead>
 
@@ -65,6 +66,11 @@
                         <td>
                             {{ $service?->unit?->name ?? '-' }}
                         </td>
+                        <td>
+    <a href="{{ route('staff.show', $person) }}">
+        Lihat
+    </a>
+</td>
 
                     </tr>
 

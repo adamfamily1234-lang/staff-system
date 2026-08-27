@@ -56,8 +56,27 @@ class Staff extends Model
         ];
     }
 
+        /**
+     * Rekod perkhidmatan staf.
+     */
     public function serviceRecords(): HasMany
     {
         return $this->hasMany(StaffServiceRecord::class);
+    }
+
+    /**
+     * Rekod pendidikan staf.
+     */
+    public function educations(): HasMany
+    {
+        return $this->hasMany(StaffEducation::class);
+    }
+
+    /**
+     * Rekod kemahiran staf.
+     */
+    public function skills(): HasMany
+    {
+        return $this->hasMany(StaffSkill::class);
     }
 }
