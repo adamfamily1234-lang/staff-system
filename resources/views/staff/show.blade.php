@@ -16,7 +16,11 @@
             ← Kembali ke Senarai Staf
         </a>
     </p>
-
+@if (session('success'))
+    <p style="color: green;">
+        {{ session('success') }}
+    </p>
+@endif
     <hr>
 
     {{-- Maklumat Peribadi --}}
@@ -185,12 +189,7 @@
 
 <h3>Pendidikan</h3>
 
-{{-- Mesej berjaya --}}
-@if (session('success'))
-    <p style="color: green;">
-        {{ session('success') }}
-    </p>
-@endif
+
 
 {{-- Senarai pendidikan --}}
 @if ($staff->educations->count())
@@ -452,6 +451,590 @@
         + Simpan Kemahiran
     </button>
 </form>
+<hr>
 
+<h3>Kursus</h3>
+
+@if ($staff->courses->count())
+    <table border="1" cellpadding="10" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Jenis Bidang</th>
+                <th>Kategori Utama Kursus</th>
+                <th>Sistem / Sub-Kategori</th>
+                <th>Nama Kursus</th>
+                <th>Penganjur</th>
+                <th>Tarikh</th>
+                <th>Tempat</th>
+                <th>Catatan</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach ($staff->courses as $course)
+                <tr>
+                    <td>
+                        {{ $course->fieldType?->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $course->mainCategory?->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $course->subCategory?->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $course->course_name }}
+                    </td>
+
+                    <td>
+                        {{ $course->organizer ?? '-' }}
+                    </td>
+
+                    <td>
+                        @if ($course->start_date)
+                            {{ $course->start_date->format('d/m/Y') }}
+                        @else
+                            -
+                        @endif
+
+                        @if ($course->end_date)
+                            hingga {{ $course->end_date->format('d/m/Y') }}
+                        @endif
+                    </td>
+
+                    <td>
+                        {{ $course->venue ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $course->notes ?? '-' }}
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <p>Tiada rekod kursus.</p>
+@endif
+
+<br>
+
+<h4>Tambah Kursus</h4>
+
+<form action="{{ route('staff.courses.store', $staff) }}" method="POST">
+    @csrf
+
+    <div>
+        <label for="course_field_type_id">
+            Jenis Bidang
+        </label><br>
+
+        <select
+            name="course_field_type_id"
+            id="course_field_type_id"
+        >
+            <option value="">-- Pilih Jenis Bidang --</option>
+
+            @foreach ($courseFieldTypes as $item)
+                <option value="{{ $item->id }}">
+                    {{ $item->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="course_main_category_id">
+            Kategori Utama Kursus
+        </label><br>
+
+        <select
+            name="course_main_category_id"
+            id="course_main_category_id"
+        >
+            <option value="">-- Pilih Kategori Utama Kursus --</option>
+
+            @foreach ($courseMainCategories as $item)
+                <option value="{{ $item->id }}">
+                    {{ $item->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="course_sub_category_id">
+            Sistem / Sub-Kategori
+        </label><br>
+
+        <select
+            name="course_sub_category_id"
+            id="course_sub_category_id"
+        >
+            <option value="">-- Pilih Sistem / Sub-Kategori --</option>
+
+            @foreach ($courseSubCategories as $item)
+                <option value="{{ $item->id }}">
+                    {{ $item->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="course_name">
+            Nama Kursus
+        </label><br>
+
+        <input
+            type="text"
+            name="course_name"
+            id="course_name"
+            required
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="organizer">
+            Penganjur
+        </label><br>
+
+        <input
+            type="text"
+            name="organizer"
+            id="organizer"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="start_date">
+            Tarikh Mula
+        </label><br>
+
+        <input
+            type="date"
+            name="start_date"
+            id="start_date"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="end_date">
+            Tarikh Tamat
+        </label><br>
+
+        <input
+            type="date"
+            name="end_date"
+            id="end_date"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="venue">
+            Tempat
+        </label><br>
+
+        <input
+            type="text"
+            name="venue"
+            id="venue"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="notes">
+            Catatan
+        </label><br>
+
+        <textarea
+            name="notes"
+            id="notes"
+            rows="4"
+            cols="50"
+        ></textarea>
+    </div>
+
+    <br>
+
+    <button type="submit">
+        + Simpan Kursus
+    </button>
+</form>
+
+
+<hr>
+
+<h3>Anugerah</h3>
+
+@if ($staff->awards->count())
+    <table border="1" cellpadding="10" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Nama Anugerah</th>
+                <th>Pemberi / Organisasi</th>
+                <th>Tahun</th>
+                <th>Peringkat</th>
+                <th>Catatan</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach ($staff->awards as $award)
+                <tr>
+                    <td>{{ $award->award_name }}</td>
+                    <td>{{ $award->organization ?? '-' }}</td>
+                    <td>{{ $award->year ?? '-' }}</td>
+                    <td>{{ $award->level ?? '-' }}</td>
+                    <td>{{ $award->notes ?? '-' }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <p>Tiada rekod anugerah.</p>
+@endif
+
+<br>
+
+<h4>Tambah Anugerah</h4>
+
+<form action="{{ route('staff.awards.store', $staff) }}" method="POST">
+    @csrf
+
+    <div>
+        <label for="award_name">Nama Anugerah</label><br>
+
+        <input
+            type="text"
+            name="award_name"
+            id="award_name"
+            required
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="organization">
+            Pemberi / Organisasi
+        </label><br>
+
+        <input
+            type="text"
+            name="organization"
+            id="organization"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="year">Tahun</label><br>
+
+        <select name="year" id="year">
+            <option value="">-- Pilih Tahun --</option>
+
+            @for ($year = date('Y'); $year >= 1950; $year--)
+                <option value="{{ $year }}">
+                    {{ $year }}
+                </option>
+            @endfor
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="level">Peringkat</label><br>
+
+        <select name="level" id="level">
+            <option value="">-- Pilih Peringkat --</option>
+            <option value="Jabatan">Jabatan</option>
+            <option value="Negeri">Negeri</option>
+            <option value="Kebangsaan">Kebangsaan</option>
+            <option value="Antarabangsa">Antarabangsa</option>
+            <option value="Lain-lain">Lain-lain</option>
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="notes">Catatan</label><br>
+
+        <textarea
+            name="notes"
+            id="notes"
+            rows="4"
+            cols="50"
+        ></textarea>
+    </div>
+
+    <br>
+
+    <button type="submit">
+        + Simpan Anugerah
+    </button>
+</form>
+
+<hr>
+
+<h3>Sejarah Penempatan</h3>
+
+@if ($staff->placements->count())
+    <table border="1" cellpadding="10" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Gred</th>
+                <th>Status Gred</th>
+                <th>Jawatan</th>
+                <th>Jenis Penempatan</th>
+                <th>Bahagian</th>
+                <th>Unit</th>
+                <th>Tarikh Mula</th>
+                <th>Tarikh Tamat</th>
+                <th>Catatan</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach ($staff->placements as $placement)
+                <tr>
+                    <td>
+                        {{ $placement->grade?->grade_code ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $placement->grade_status }}
+                    </td>
+
+                    <td>
+                        {{ $placement->position?->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $placement->placementType?->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $placement->department?->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $placement->unit?->name ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $placement->start_date?->format('d/m/Y') ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $placement->end_date?->format('d/m/Y') ?? 'Semasa' }}
+                    </td>
+
+                    <td>
+                        {{ $placement->notes ?? '-' }}
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <p>Tiada rekod penempatan.</p>
+@endif
+
+<br>
+
+<h4>Tambah Rekod Penempatan</h4>
+
+<form action="{{ route('staff.placements.store', $staff) }}" method="POST">
+    @csrf
+
+    <div>
+        <label for="grade_master_id">Gred</label><br>
+
+        <select
+            name="grade_master_id"
+            id="grade_master_id"
+            required
+        >
+            <option value="">-- Pilih Gred --</option>
+
+            @foreach ($gradeMasters as $grade)
+                <option value="{{ $grade->id }}">
+                    {{ $grade->grade_code }}
+                    -
+                    {{ $grade->grade_category }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="grade_status">Status Gred</label><br>
+
+        <select
+            name="grade_status"
+            id="grade_status"
+            required
+        >
+            <option value="">-- Pilih Status --</option>
+            <option value="Hakiki">Hakiki</option>
+            <option value="Memangku">Memangku</option>
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="position_master_id">Jawatan</label><br>
+
+        <select
+            name="position_master_id"
+            id="position_master_id"
+        >
+            <option value="">-- Pilih Jawatan --</option>
+
+            @foreach ($positionMasters as $position)
+                <option value="{{ $position->id }}">
+                    {{ $position->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="placement_type_master_id">
+            Jenis Penempatan
+        </label><br>
+
+        <select
+            name="placement_type_master_id"
+            id="placement_type_master_id"
+        >
+            <option value="">-- Pilih Jenis Penempatan --</option>
+
+            @foreach ($placementTypeMasters as $placementType)
+                <option value="{{ $placementType->id }}">
+                    {{ $placementType->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="placement_department_id">
+            Bahagian
+        </label><br>
+
+        <select
+            name="department_id"
+            id="placement_department_id"
+        >
+            <option value="">-- Pilih Bahagian --</option>
+
+            @foreach ($departments ?? [] as $department)
+                <option value="{{ $department->id }}">
+                    {{ $department->name }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="placement_unit_id">
+            Unit
+        </label><br>
+
+        <select
+            name="unit_id"
+            id="placement_unit_id"
+        >
+            <option value="">-- Pilih Unit --</option>
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="placement_start_date">
+            Tarikh Mula
+        </label><br>
+
+        <input
+            type="date"
+            name="start_date"
+            id="placement_start_date"
+            required
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="placement_end_date">
+            Tarikh Tamat
+        </label><br>
+
+        <input
+            type="date"
+            name="end_date"
+            id="placement_end_date"
+        >
+
+        <small>
+            Kosongkan jika ini penempatan semasa.
+        </small>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="placement_notes">
+            Catatan
+        </label><br>
+
+        <textarea
+            name="notes"
+            id="placement_notes"
+            rows="4"
+            cols="50"
+        ></textarea>
+    </div>
+
+    <br>
+
+    <button type="submit">
+        + Simpan Penempatan
+    </button>
+</form>
 </body>
 </html>

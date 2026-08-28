@@ -17,3 +17,15 @@ Route::post(
     '/staff/{staff}/skills',
     [StaffController::class, 'storeSkill']
 )->name('staff.skills.store');
+Route::post(
+    '/staff/{staff}/courses',
+    [StaffController::class, 'storeCourse']
+)->name('staff.courses.store');
+Route::post(
+    '/staff/{staff}/awards',
+    [StaffController::class, 'storeAward']
+)->name('staff.awards.store');
+Route::post(
+    '/staff/{staff}/placements',
+    [StaffController::class, 'storePlacement']
+)->name('staff.placements.store');

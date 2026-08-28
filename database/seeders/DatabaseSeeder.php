@@ -11,6 +11,10 @@ class DatabaseSeeder extends Seeder
         $this->call([
             DepartmentSeeder::class,
             StaffSeeder::class,
+
+            CourseFieldTypeSeeder::class,
+            CourseMainCategorySeeder::class,
+            CourseSubCategorySeeder::class,
         ]);
     }
 }

@@ -5,6 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Department;
 use App\Models\Staff;
 use App\Models\StaffServiceRecord;
+use App\Models\CourseFieldType;
+use App\Models\CourseMainCategory;
+use App\Models\CourseSubCategory;
+use App\Models\GradeMaster;
+use App\Models\PositionMaster;
+use App\Models\PlacementTypeMaster;
 use Illuminate\Http\Request;
 
 class StaffController extends Controller
@@ -434,7 +440,7 @@ class StaffController extends Controller
     }
 
 
-   /**
+/**
  * Paparkan profil staf.
  */
 public function show(Staff $staff)
@@ -444,12 +450,113 @@ public function show(Staff $staff)
         'serviceRecords.unit',
         'educations',
         'skills',
+        'courses.fieldType',
+        'courses.mainCategory',
+        'courses.subCategory',
+        'awards',
+        'placements.grade',
+        'placements.position',
+        'placements.placementType',
+        'placements.department',
+        'placements.unit',
     ]);
 
-    return view('staff.show', compact('staff'));
+    $courseFieldTypes = CourseFieldType::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
+    $courseMainCategories = CourseMainCategory::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
+    $courseSubCategories = CourseSubCategory::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
+    $gradeMasters = GradeMaster::where('is_active', true)
+        ->orderBy('ranking_order')
+        ->get();
+
+    $positionMasters = PositionMaster::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
+    $placementTypeMasters = PlacementTypeMaster::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
+    $departments = Department::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
+    return view('staff.show', compact(
+        'staff',
+        'courseFieldTypes',
+        'courseMainCategories',
+        'courseSubCategories',
+        'gradeMasters',
+        'positionMasters',
+        'placementTypeMasters',
+        'departments'
+    ));
 }
 
+public function storePlacement(Request $request, Staff $staff)
+{
+    $validated = $request->validate([
+        'grade_master_id' => [
+            'required',
+            'exists:grade_masters,id',
+        ],
 
+        'grade_status' => [
+            'required',
+            'in:Hakiki,Memangku',
+        ],
+
+        'position_master_id' => [
+            'nullable',
+            'exists:position_masters,id',
+        ],
+
+        'placement_type_master_id' => [
+            'nullable',
+            'exists:placement_type_masters,id',
+        ],
+
+        'department_id' => [
+            'nullable',
+            'exists:departments,id',
+        ],
+
+        'unit_id' => [
+            'nullable',
+            'exists:units,id',
+        ],
+
+        'start_date' => [
+            'required',
+            'date',
+        ],
+
+        'end_date' => [
+            'nullable',
+            'date',
+            'after_or_equal:start_date',
+        ],
+
+        'notes' => [
+            'nullable',
+            'string',
+        ],
+    ]);
+
+    $staff->placements()->create($validated);
+
+    return redirect()
+        ->route('staff.show', $staff)
+        ->with('success', 'Rekod penempatan berjaya disimpan.');
+}
     /**
      * Paparkan borang edit staf.
      */
@@ -501,22 +608,9 @@ public function storeEducation(Request $request, Staff $staff)
 public function storeSkill(Request $request, Staff $staff)
 {
     $validated = $request->validate([
-        'skill' => [
-            'required',
-            'string',
-            'max:255',
-        ],
-
-        'level' => [
-            'required',
-            'string',
-            'max:100',
-        ],
-
-        'description' => [
-            'nullable',
-            'string',
-        ],
+        'skill' => ['required', 'string', 'max:255'],
+        'level' => ['required', 'string', 'max:100'],
+        'description' => ['nullable', 'string'],
     ]);
 
     $staff->skills()->create($validated);
@@ -524,6 +618,111 @@ public function storeSkill(Request $request, Staff $staff)
     return redirect()
         ->route('staff.show', $staff)
         ->with('success', 'Maklumat kemahiran berjaya disimpan.');
+}
+/**
+     * Simpan Rekod Kursus Staf.
+     */
+public function storeCourse(Request $request, Staff $staff)
+{
+    $validated = $request->validate([
+        'course_field_type_id' => [
+            'nullable',
+            'exists:course_field_types,id',
+        ],
+
+        'course_main_category_id' => [
+            'nullable',
+            'exists:course_main_categories,id',
+        ],
+
+        'course_sub_category_id' => [
+            'nullable',
+            'exists:course_sub_categories,id',
+        ],
+
+        'course_name' => [
+            'required',
+            'string',
+            'max:255',
+        ],
+
+        'organizer' => [
+            'nullable',
+            'string',
+            'max:255',
+        ],
+
+        'start_date' => [
+            'nullable',
+            'date',
+        ],
+
+        'end_date' => [
+            'nullable',
+            'date',
+            'after_or_equal:start_date',
+        ],
+
+        'venue' => [
+            'nullable',
+            'string',
+            'max:255',
+        ],
+
+        'notes' => [
+            'nullable',
+            'string',
+        ],
+    ]);
+
+    $staff->courses()->create($validated);
+
+    return redirect()
+        ->route('staff.show', $staff)
+        ->with('success', 'Maklumat kursus berjaya disimpan.');
+}
+
+/**
+     * Simpan Rekod Anugerah Staf.
+     */
+public function storeAward(Request $request, Staff $staff)
+{
+    $validated = $request->validate([
+        'award_name' => [
+            'required',
+            'string',
+            'max:255',
+        ],
+
+        'organization' => [
+            'nullable',
+            'string',
+            'max:255',
+        ],
+
+        'year' => [
+            'nullable',
+            'integer',
+            'min:1900',
+            'max:2200',
+        ],
+
+        'level' => [
+            'nullable',
+            'in:Jabatan,Negeri,Kebangsaan,Antarabangsa,Lain-lain',
+        ],
+
+        'notes' => [
+            'nullable',
+            'string',
+        ],
+    ]);
+
+    $staff->awards()->create($validated);
+
+    return redirect()
+        ->route('staff.show', $staff)
+        ->with('success', 'Maklumat anugerah berjaya disimpan.');
 }
 
     /**

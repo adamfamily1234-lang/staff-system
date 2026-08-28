@@ -79,4 +79,26 @@ class Staff extends Model
     {
         return $this->hasMany(StaffSkill::class);
     }
+
+    /**
+     * Rekod Kursus staf.
+     */
+    public function courses(): HasMany
+{
+    return $this->hasMany(StaffCourse::class);
+}
+ /**
+     * Rekod Anugerah staf.
+     */
+public function awards(): HasMany
+{
+    return $this->hasMany(StaffAward::class);
+}
+ /**
+     * Rekod Penempatan staf.
+     */
+public function placements(): HasMany
+{
+    return $this->hasMany(StaffPlacement::class);
+}
 }
