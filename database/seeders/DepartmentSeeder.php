@@ -10,37 +10,47 @@ class DepartmentSeeder extends Seeder
 {
     public function run(): void
     {
-        $engineering = Department::create([
-            'name' => 'Jabatan Kejuruteraan',
-            'code' => 'JK',
-            'is_active' => true,
-        ]);
+        $engineering = Department::updateOrCreate(
+            ['code' => 'JK'],
+            [
+                'name' => 'Jabatan Kejuruteraan',
+                'is_active' => true,
+            ]
+        );
 
-        Unit::create([
-            'department_id' => $engineering->id,
-            'name' => 'Unit Mekanikal',
-            'code' => 'MECH',
-            'is_active' => true,
-        ]);
+        Unit::updateOrCreate(
+            ['code' => 'MECH'],
+            [
+                'department_id' => $engineering->id,
+                'name' => 'Unit Mekanikal',
+                'is_active' => true,
+            ]
+        );
 
-        Unit::create([
-            'department_id' => $engineering->id,
-            'name' => 'Unit Elektrikal',
-            'code' => 'ELEC',
-            'is_active' => true,
-        ]);
+        Unit::updateOrCreate(
+            ['code' => 'ELEC'],
+            [
+                'department_id' => $engineering->id,
+                'name' => 'Unit Elektrikal',
+                'is_active' => true,
+            ]
+        );
 
-        $administration = Department::create([
-            'name' => 'Jabatan Pentadbiran',
-            'code' => 'JPM',
-            'is_active' => true,
-        ]);
+        $admin = Department::updateOrCreate(
+            ['code' => 'JPM'],
+            [
+                'name' => 'Jabatan Pentadbiran',
+                'is_active' => true,
+            ]
+        );
 
-        Unit::create([
-            'department_id' => $administration->id,
-            'name' => 'Unit Sumber Manusia',
-            'code' => 'HR',
-            'is_active' => true,
-        ]);
+        Unit::updateOrCreate(
+            ['code' => 'HR'],
+            [
+                'department_id' => $admin->id,
+                'name' => 'Unit Sumber Manusia',
+                'is_active' => true,
+            ]
+        );
     }
 }

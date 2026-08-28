@@ -28,6 +28,102 @@ class StaffController extends Controller
         return view('staff.index', compact('staff'));
     }
 
+    /**
+ * Paparkan senarai kekananan staf.
+ */
+public function seniority()
+{
+    $staffList = Staff::with([
+        'placements.grade',
+        'placements.position',
+        'placements.department',
+        'placements.unit',
+    ])->get();
+
+    $seniorityList = $staffList->map(function ($staff) {
+
+        // Ambil Hakiki sahaja
+        $hakikiPlacements = $staff->placements
+            ->where('grade_status', 'Hakiki');
+
+        if ($hakikiPlacements->isEmpty()) {
+            $staff->seniority_grade = null;
+            $staff->seniority_rank = 0;
+            $staff->seniority_start_date = null;
+            $staff->seniority_placement = null;
+
+            return $staff;
+        }
+
+        // Cari ranking gred Hakiki paling tinggi
+        $highestRank = $hakikiPlacements->max(function ($placement) {
+            return $placement->grade?->ranking_order ?? 0;
+        });
+
+        // Ambil semua rekod Hakiki dalam gred tertinggi itu
+        $highestGradePlacements = $hakikiPlacements
+            ->filter(function ($placement) use ($highestRank) {
+                return ($placement->grade?->ranking_order ?? 0)
+                    === $highestRank;
+            })
+            ->sortBy('start_date');
+
+        // Rekod paling awal dalam gred Hakiki tertinggi
+        $seniorityPlacement = $highestGradePlacements->first();
+
+        $staff->seniority_grade =
+            $seniorityPlacement?->grade?->grade_code;
+
+        $staff->seniority_rank = $highestRank;
+
+        $staff->seniority_start_date =
+            $seniorityPlacement?->start_date;
+
+        $staff->seniority_placement =
+            $seniorityPlacement;
+
+        return $staff;
+    });
+
+    // Susun ranking keseluruhan
+    $seniorityList = $seniorityList
+        ->sort(function ($a, $b) {
+
+            // 1. Gred lebih tinggi dahulu
+            if ($a->seniority_rank !== $b->seniority_rank) {
+                return $b->seniority_rank <=> $a->seniority_rank;
+            }
+
+            // Staf tiada rekod Hakiki diletakkan bawah
+            if (!$a->seniority_start_date && !$b->seniority_start_date) {
+                return $a->name <=> $b->name;
+            }
+
+            if (!$a->seniority_start_date) {
+                return 1;
+            }
+
+            if (!$b->seniority_start_date) {
+                return -1;
+            }
+
+            // 2. Gred sama:
+            // tarikh Hakiki lebih awal = lebih kanan
+            $dateComparison =
+                $a->seniority_start_date
+                    <=> $b->seniority_start_date;
+
+            if ($dateComparison !== 0) {
+                return $dateComparison;
+            }
+
+            // 3. Jika semuanya sama, susun nama
+            return $a->name <=> $b->name;
+        })
+        ->values();
+
+    return view('staff.seniority', compact('seniorityList'));
+}
 
     /**
      * Paparkan borang tambah staf.
@@ -489,6 +585,15 @@ public function show(Staff $staff)
         ->orderBy('name')
         ->get();
 
+    $latestHakikiPlacement = $staff->placements
+    ->where('grade_status', 'Hakiki')
+    ->sortByDesc(function ($placement) {
+        return $placement->grade?->ranking_order ?? 0;
+    })
+    ->sortBy('start_date')
+    ->first();
+
+
     return view('staff.show', compact(
         'staff',
         'courseFieldTypes',
@@ -497,7 +602,8 @@ public function show(Staff $staff)
         'gradeMasters',
         'positionMasters',
         'placementTypeMasters',
-        'departments'
+        'departments',
+        'latestHakikiPlacement',
     ));
 }
 
@@ -551,7 +657,40 @@ public function storePlacement(Request $request, Staff $staff)
         ],
     ]);
 
-    $staff->placements()->create($validated);
+// Simpan rekod penempatan baru
+$staff->placements()->create($validated);
+
+
+// Susun semula semua rekod penempatan ikut tarikh mula
+$placements = $staff->placements()
+    ->orderBy('start_date')
+    ->orderBy('id')
+    ->get();
+
+foreach ($placements as $index => $placement) {
+
+    $nextPlacement = $placements->get($index + 1);
+
+    if ($nextPlacement) {
+
+        $nextStartDate = \Carbon\Carbon::parse(
+            $nextPlacement->start_date
+        );
+
+        $placement->update([
+            'end_date' => $nextStartDate
+                ->copy()
+                ->subDay(),
+        ]);
+
+    } else {
+
+        // Rekod paling terkini sahaja dianggap semasa
+        $placement->update([
+            'end_date' => null,
+        ]);
+    }
+}
 
     return redirect()
         ->route('staff.show', $staff)

@@ -99,6 +99,8 @@ public function awards(): HasMany
      */
 public function placements(): HasMany
 {
-    return $this->hasMany(StaffPlacement::class);
+    return $this->hasMany(StaffPlacement::class)
+        ->orderBy('start_date')
+        ->orderBy('id');
 }
 }

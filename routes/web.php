@@ -6,6 +6,10 @@ use App\Http\Controllers\StaffController;
 
 Route::get('/departments/{department}/units', [StaffController::class, 'unitsByDepartment'])
     ->name('departments.units');
+
+Route::get('/staff-seniority', [StaffController::class, 'seniority'])
+    ->name('staff.seniority');
+    
 Route::resource('staff', StaffController::class);
 
 Route::post(

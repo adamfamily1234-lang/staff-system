@@ -813,12 +813,24 @@
                 <th>Unit</th>
                 <th>Tarikh Mula</th>
                 <th>Tarikh Tamat</th>
+                <th>Tempoh</th>
+                <th>Status Penempatan</th>
                 <th>Catatan</th>
             </tr>
         </thead>
 
         <tbody>
             @foreach ($staff->placements as $placement)
+
+                @php
+                    $start = $placement->start_date;
+                    $end = $placement->end_date ?? now();
+
+                    $diff = $start
+                        ? $start->diff($end)
+                        : null;
+                @endphp
+
                 <tr>
                     <td>
                         {{ $placement->grade?->grade_code ?? '-' }}
@@ -853,16 +865,87 @@
                     </td>
 
                     <td>
+                        @if ($diff)
+                            {{ $diff->y }} Tahun
+                            {{ $diff->m }} Bulan
+                            {{ $diff->d }} Hari
+                        @else
+                            -
+                        @endif
+                    </td>
+                    <td>
+                        {{ $placement->end_date ? 'Tamat' : 'Semasa' }}
+                    </td>                    
+                    <td>
                         {{ $placement->notes ?? '-' }}
                     </td>
                 </tr>
+
             @endforeach
         </tbody>
     </table>
+
 @else
     <p>Tiada rekod penempatan.</p>
 @endif
 
+
+<hr>
+
+<h3>Ringkasan Kekananan</h3>
+
+@if ($latestHakikiPlacement)
+
+    @php
+        $hakikiStart = $latestHakikiPlacement->start_date;
+        $hakikiEnd = $latestHakikiPlacement->end_date ?? now();
+
+        $hakikiDiff = $hakikiStart
+            ? $hakikiStart->diff($hakikiEnd)
+            : null;
+    @endphp
+
+    <table border="1" cellpadding="10" cellspacing="0">
+
+        <tr>
+            <th>Gred Hakiki Tertinggi</th>
+            <td>
+                {{ $latestHakikiPlacement->grade?->grade_code ?? '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Tarikh Mula Hakiki</th>
+            <td>
+                {{ $latestHakikiPlacement->start_date?->format('d/m/Y') ?? '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Tempoh Dalam Gred Hakiki</th>
+            <td>
+                @if ($hakikiDiff)
+                    {{ $hakikiDiff->y }} Tahun
+                    {{ $hakikiDiff->m }} Bulan
+                    {{ $hakikiDiff->d }} Hari
+                @else
+                    -
+                @endif
+            </td>
+        </tr>
+
+        <tr>
+            <th>Jawatan</th>
+            <td>
+                {{ $latestHakikiPlacement->position?->name ?? '-' }}
+            </td>
+        </tr>
+
+    </table>
+
+@else
+    <p>Tiada rekod gred Hakiki.</p>
+@endif
 <br>
 
 <h4>Tambah Rekod Penempatan</h4>
@@ -1018,17 +1101,60 @@
     <br>
 
     <div>
-        <label for="placement_notes">
-            Catatan
-        </label><br>
+    <label for="placement_notes_select">
+        Catatan
+    </label><br>
 
-        <textarea
-            name="notes"
-            id="placement_notes"
-            rows="4"
-            cols="50"
-        ></textarea>
-    </div>
+    <select
+        id="placement_notes_select"
+    >
+        <option value="">-- Pilih Catatan --</option>
+
+        <option value="Pertukaran atas keperluan jabatan">
+            Pertukaran atas keperluan jabatan
+        </option>
+
+        <option value="Penempatan kader">
+            Penempatan kader
+        </option>
+
+        <option value="Pertukaran antara unit">
+            Pertukaran antara unit
+        </option>
+
+        <option value="Kenaikan pangkat">
+            Kenaikan pangkat
+        </option>
+
+        <option value="Lain-lain">
+            Lain-lain
+        </option>
+    </select>
+</div>
+
+<br>
+
+<div
+    id="placement_notes_other_container"
+    style="display: none;"
+>
+    <label for="placement_notes_other">
+        Catatan Lain-lain
+    </label><br>
+
+    <textarea
+        id="placement_notes_other"
+        rows="4"
+        cols="50"
+        placeholder="Taip catatan lain di sini..."
+    ></textarea>
+</div>
+
+<input
+    type="hidden"
+    name="notes"
+    id="placement_notes"
+>
 
     <br>
 
@@ -1036,5 +1162,103 @@
         + Simpan Penempatan
     </button>
 </form>
+
+
+<script>
+    const placementDepartment = document.getElementById('placement_department_id');
+    const placementUnit = document.getElementById('placement_unit_id');
+
+    if (placementDepartment && placementUnit) {
+
+        placementDepartment.addEventListener('change', async function () {
+
+            const departmentId = this.value;
+
+            placementUnit.innerHTML =
+                '<option value="">-- Pilih Unit --</option>';
+
+            if (!departmentId) {
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `/departments/${departmentId}/units`
+                );
+
+                if (!response.ok) {
+                    throw new Error('Gagal mendapatkan senarai unit.');
+                }
+
+                const units = await response.json();
+
+                units.forEach(function (unit) {
+
+                    const option = document.createElement('option');
+
+                    option.value = unit.id;
+                    option.textContent = unit.name;
+
+                    placementUnit.appendChild(option);
+                });
+
+            } catch (error) {
+
+                console.error(error);
+
+                alert('Tidak dapat memuatkan senarai unit.');
+            }
+        });
+    }
+
+    const placementNotesSelect =
+    document.getElementById('placement_notes_select');
+
+const placementNotesOtherContainer =
+    document.getElementById('placement_notes_other_container');
+
+const placementNotesOther =
+    document.getElementById('placement_notes_other');
+
+const placementNotes =
+    document.getElementById('placement_notes');
+
+if (
+    placementNotesSelect &&
+    placementNotesOtherContainer &&
+    placementNotesOther &&
+    placementNotes
+) {
+
+    placementNotesSelect.addEventListener('change', function () {
+
+        if (this.value === 'Lain-lain') {
+
+            placementNotesOtherContainer.style.display = 'block';
+
+            placementNotes.value =
+                placementNotesOther.value;
+
+        } else {
+
+            placementNotesOtherContainer.style.display = 'none';
+
+            placementNotesOther.value = '';
+
+            placementNotes.value =
+                this.value;
+        }
+    });
+
+    placementNotesOther.addEventListener('input', function () {
+
+        if (placementNotesSelect.value === 'Lain-lain') {
+            placementNotes.value = this.value;
+        }
+
+    });
+}
+</script>
+
 </body>
 </html>
