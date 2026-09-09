@@ -36,7 +36,7 @@ class DepartmentSeeder extends Seeder
             ]
         );
 
-        $admin = Department::updateOrCreate(
+        $administration = Department::updateOrCreate(
             ['code' => 'JPM'],
             [
                 'name' => 'Jabatan Pentadbiran',
@@ -47,7 +47,7 @@ class DepartmentSeeder extends Seeder
         Unit::updateOrCreate(
             ['code' => 'HR'],
             [
-                'department_id' => $admin->id,
+                'department_id' => $administration->id,
                 'name' => 'Unit Sumber Manusia',
                 'is_active' => true,
             ]
