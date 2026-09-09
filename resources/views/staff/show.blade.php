@@ -137,24 +137,32 @@
             </tr>
 
             <tr>
-                <th>Jawatan</th>
-                <td>{{ $record->position ?? '-' }}</td>
-            </tr>
+                <th>Jawatan Semasa</th>
+    <td>
+        {{ $currentPlacement?->position?->name ?? $record->position ?? '-' }}
+    </td>
+</tr>
 
-            <tr>
-                <th>Gred</th>
-                <td>{{ $record->grade ?? '-' }}</td>
-            </tr>
+<tr>
+    <th>Gred Semasa</th>
+    <td>
+        {{ $currentPlacement?->grade?->grade_code ?? $record->grade ?? '-' }}
+    </td>
+</tr>
 
-            <tr>
-                <th>Bahagian</th>
-                <td>{{ $record->department?->name ?? '-' }}</td>
-            </tr>
+<tr>
+    <th>Bahagian Semasa</th>
+    <td>
+        {{ $currentPlacement?->department?->name ?? $record->department?->name ?? '-' }}
+    </td>
+</tr>
 
-            <tr>
-                <th>Unit</th>
-                <td>{{ $record->unit?->name ?? '-' }}</td>
-            </tr>
+<tr>
+    <th>Unit Semasa</th>
+    <td>
+        {{ $currentPlacement?->unit?->name ?? $record->unit?->name ?? '-' }}
+    </td>
+</tr>
 
             <tr>
                 <th>Tarikh Mula Berkhidmat</th>
@@ -201,6 +209,7 @@
                 <th>Nama / Kelayakan</th>
                 <th>Institusi</th>
                 <th>Tahun</th>
+                <th>Tindakan</th>
             </tr>
         </thead>
 
@@ -221,6 +230,23 @@
 
                     <td>
                         {{ $education->year ?? '-' }}
+                    </td>
+
+                    <td>
+                        <a href="{{ route('staff.educations.edit', [$staff, $education]) }}">
+                            Edit
+                        </a>
+
+                        <form
+                            action="{{ route('staff.educations.destroy', [$staff, $education]) }}"
+                            method="POST"
+                            style="display:inline;"
+                            onsubmit="return confirm('Padam rekod pendidikan ini?');"
+                        >
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Padam</button>
+                        </form>
                     </td>
                 </tr>
             @endforeach
@@ -352,6 +378,7 @@
                 <th>Kemahiran</th>
                 <th>Tahap</th>
                 <th>Keterangan</th>
+                <th>Tindakan</th>
             </tr>
         </thead>
 
@@ -368,6 +395,23 @@
 
                     <td>
                         {{ $skill->description ?? '-' }}
+                    </td>
+
+                    <td>
+                        <a href="{{ route('staff.skills.edit', [$staff, $skill]) }}">
+                            Edit
+                        </a>
+
+                        <form
+                            action="{{ route('staff.skills.destroy', [$staff, $skill]) }}"
+                            method="POST"
+                            style="display:inline;"
+                            onsubmit="return confirm('Padam rekod kemahiran ini?');"
+                        >
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Padam</button>
+                        </form>
                     </td>
                 </tr>
             @endforeach
@@ -467,6 +511,7 @@
                 <th>Tarikh</th>
                 <th>Tempat</th>
                 <th>Catatan</th>
+                <th>Tindakan</th>
             </tr>
         </thead>
 
@@ -511,6 +556,23 @@
 
                     <td>
                         {{ $course->notes ?? '-' }}
+                    </td>
+
+                    <td>
+                        <a href="{{ route('staff.courses.edit', [$staff, $course]) }}">
+                            Edit
+                        </a>
+
+                        <form
+                            action="{{ route('staff.courses.destroy', [$staff, $course]) }}"
+                            method="POST"
+                            style="display:inline;"
+                            onsubmit="return confirm('Padam rekod kursus ini?');"
+                        >
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Padam</button>
+                        </form>
                     </td>
                 </tr>
             @endforeach
@@ -695,6 +757,7 @@
                 <th>Tahun</th>
                 <th>Peringkat</th>
                 <th>Catatan</th>
+                <th>Tindakan</th>
             </tr>
         </thead>
 
@@ -706,6 +769,22 @@
                     <td>{{ $award->year ?? '-' }}</td>
                     <td>{{ $award->level ?? '-' }}</td>
                     <td>{{ $award->notes ?? '-' }}</td>
+                    <td>
+                        <a href="{{ route('staff.awards.edit', [$staff, $award]) }}">
+                            Edit
+                        </a>
+
+                        <form
+                            action="{{ route('staff.awards.destroy', [$staff, $award]) }}"
+                            method="POST"
+                            style="display:inline;"
+                            onsubmit="return confirm('Padam rekod anugerah ini?');"
+                        >
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Padam</button>
+                        </form>
+                    </td>
                 </tr>
             @endforeach
         </tbody>
@@ -799,6 +878,99 @@
 
 <hr>
 
+
+<h3>Penempatan Semasa</h3>
+
+@if ($currentPlacement)
+
+    @php
+        $currentStart = $currentPlacement->start_date;
+        $currentEnd = now();
+
+        $currentDiff = $currentStart
+            ? $currentStart->diff($currentEnd)
+            : null;
+    @endphp
+
+    <table border="1" cellpadding="10" cellspacing="0">
+
+        <tr>
+            <th>Gred</th>
+            <td>
+                {{ $currentPlacement->grade?->grade_code ?? '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Status Gred</th>
+            <td>
+                {{ $currentPlacement->grade_status ?? '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Jawatan</th>
+            <td>
+                {{ $currentPlacement->position?->name ?? '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Jenis Penempatan</th>
+            <td>
+                {{ $currentPlacement->placementType?->name ?? '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Bahagian</th>
+            <td>
+                {{ $currentPlacement->department?->name ?? '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Unit</th>
+            <td>
+                {{ $currentPlacement->unit?->name ?? '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Tarikh Mula</th>
+            <td>
+                {{ $currentPlacement->start_date?->format('d/m/Y') ?? '-' }}
+            </td>
+        </tr>
+
+        <tr>
+            <th>Tempoh Semasa</th>
+            <td>
+                @if ($currentDiff)
+                    {{ $currentDiff->y }} Tahun
+                    {{ $currentDiff->m }} Bulan
+                    {{ $currentDiff->d }} Hari
+                @else
+                    -
+                @endif
+            </td>
+        </tr>
+
+        <tr>
+            <th>Catatan</th>
+            <td>
+                {{ $currentPlacement->notes ?? '-' }}
+            </td>
+        </tr>
+
+    </table>
+
+@else
+
+    <p>Tiada rekod penempatan semasa.</p>
+
+@endif
+<hr>
 <h3>Sejarah Penempatan</h3>
 
 @if ($staff->placements->count())
@@ -816,6 +988,7 @@
                 <th>Tempoh</th>
                 <th>Status Penempatan</th>
                 <th>Catatan</th>
+                <th>Tindakan</th>
             </tr>
         </thead>
 
@@ -879,6 +1052,23 @@
                     <td>
                         {{ $placement->notes ?? '-' }}
                     </td>
+
+                    <td>
+                        <a href="{{ route('staff.placements.edit', [$staff, $placement]) }}">
+                            Edit
+                        </a>
+
+                        <form
+                            action="{{ route('staff.placements.destroy', [$staff, $placement]) }}"
+                            method="POST"
+                            style="display:inline;"
+                            onsubmit="return confirm('Padam rekod penempatan ini? Kronologi tarikh tamat akan dikira semula secara automatik.');"
+                        >
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Padam</button>
+                        </form>
+                    </td>
                 </tr>
 
             @endforeach
@@ -897,11 +1087,8 @@
 @if ($latestHakikiPlacement)
 
     @php
-        $hakikiStart = $latestHakikiPlacement->start_date;
-        $hakikiEnd = $latestHakikiPlacement->end_date ?? now();
-
-        $hakikiDiff = $hakikiStart
-            ? $hakikiStart->diff($hakikiEnd)
+        $hakikiDiff = $hakikiStartDate
+            ? $hakikiStartDate->diff(now())
             : null;
     @endphp
 
@@ -917,7 +1104,7 @@
         <tr>
             <th>Tarikh Mula Hakiki</th>
             <td>
-                {{ $latestHakikiPlacement->start_date?->format('d/m/Y') ?? '-' }}
+                {{ $hakikiStartDate?->format('d/m/Y') ?? '-' }}
             </td>
         </tr>
 

@@ -103,4 +103,18 @@ public function placements(): HasMany
         ->orderBy('start_date')
         ->orderBy('id');
 }
+public function currentPlacement()
+{
+    return $this->placements()
+        ->whereNull('end_date')
+        ->latest('start_date')
+        ->first();
+}
+/**
+     * Rekod Kompetensi staf.
+     */
+public function competencies(): HasMany
+{
+    return $this->hasMany(StaffCompetency::class);
+}
 }

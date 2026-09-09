@@ -759,16 +759,42 @@
 
 
         <div>
-            <label>Status Perkhidmatan</label><br>
+    <label for="service_status">
+        Status Perkhidmatan
+    </label><br>
 
-            <input
-                type="text"
-                name="service_status"
-                value="{{ old('service_status') }}"
-                placeholder="Contoh: Aktif"
-            >
-        </div>
+    <select
+        name="service_status"
+        id="service_status"
+    >
+        <option value="">-- Pilih Status --</option>
 
+        <option value="Aktif"
+            {{ old('service_status') === 'Aktif' ? 'selected' : '' }}>
+            Aktif
+        </option>
+
+        <option value="Tidak Aktif"
+            {{ old('service_status') === 'Tidak Aktif' ? 'selected' : '' }}>
+            Tidak Aktif
+        </option>
+
+        <option value="Bersara"
+            {{ old('service_status') === 'Bersara' ? 'selected' : '' }}>
+            Bersara
+        </option>
+
+        <option value="Berhenti"
+            {{ old('service_status') === 'Berhenti' ? 'selected' : '' }}>
+            Berhenti
+        </option>
+
+        <option value="Tamat Perkhidmatan"
+            {{ old('service_status') === 'Tamat Perkhidmatan' ? 'selected' : '' }}>
+            Tamat Perkhidmatan
+        </option>
+    </select>
+</div>
         <br>
 
 
