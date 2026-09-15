@@ -879,6 +879,957 @@
 <hr>
 
 
+
+<h3>Kompetensi</h3>
+
+@if ($staff->competencies->count())
+    <table border="1" cellpadding="10" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Disiplin</th>
+                <th>Kod</th>
+                <th>Bidang / Domain</th>
+                <th>Tajuk Kompetensi</th>
+                <th>Tahap</th>
+                <th>Tarikh Pencapaian</th>
+                <th>No. Sijil</th>
+                <th>Catatan</th>
+                <th>Tindakan</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach ($staff->competencies as $staffCompetency)
+                @php
+                    $levelLabels = [
+                        1 => 'Pengenalan',
+                        2 => 'Asas',
+                        3 => 'Kompeten',
+                        4 => 'Mahir',
+                    ];
+                @endphp
+
+                <tr>
+                    <td>{{ $staffCompetency->competency?->discipline ?? '-' }}</td>
+                    <td>{{ $staffCompetency->competency?->code ?? '-' }}</td>
+                    <td>{{ $staffCompetency->competency?->domain ?? '-' }}</td>
+                    <td>{{ $staffCompetency->competency?->competency_title ?? '-' }}</td>
+
+                    <td>
+                        Tahap {{ $staffCompetency->competency_level }}
+                        -
+                        {{ $levelLabels[$staffCompetency->competency_level] ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{ $staffCompetency->achievement_date?->format('d/m/Y') ?? '-' }}
+                    </td>
+
+                    <td>{{ $staffCompetency->certificate_no ?? '-' }}</td>
+                    <td>{{ $staffCompetency->notes ?? '-' }}</td>
+
+                    <td>
+                        <a href="{{ route('staff.competencies.edit', [$staff, $staffCompetency]) }}">
+                            Edit
+                        </a>
+
+                        <form
+                            action="{{ route('staff.competencies.destroy', [$staff, $staffCompetency]) }}"
+                            method="POST"
+                            style="display:inline;"
+                            onsubmit="return confirm('Padam rekod kompetensi ini?');"
+                        >
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Padam</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <p>Tiada rekod kompetensi.</p>
+@endif
+
+<br>
+
+<h4>Tambah Kompetensi</h4>
+
+<form action="{{ route('staff.competencies.store', $staff) }}" method="POST">
+    @csrf
+
+    <div>
+        <label for="competency_discipline">
+            Disiplin
+        </label><br>
+
+        <select id="competency_discipline">
+            <option value="">-- Pilih Disiplin --</option>
+
+            @foreach ($competencyMasters->pluck('discipline')->unique()->values() as $discipline)
+                <option value="{{ $discipline }}">
+                    {{ $discipline }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="competency_master_id">
+            Kod / Bidang / Tajuk Kompetensi
+        </label><br>
+
+        <select
+            name="competency_master_id"
+            id="competency_master_id"
+            required
+        >
+            <option value="">-- Pilih Kompetensi --</option>
+
+            @foreach ($competencyMasters as $master)
+                <option
+                    value="{{ $master->id }}"
+                    data-discipline="{{ $master->discipline }}"
+                >
+                    {{ $master->code }}
+                    -
+                    {{ $master->domain }}
+                    -
+                    {{ $master->competency_title }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="competency_level">
+            Tahap Kompetensi
+        </label><br>
+
+        <select
+            name="competency_level"
+            id="competency_level"
+            required
+        >
+            <option value="">-- Pilih Tahap --</option>
+            <option value="1">Tahap 1 - Pengenalan</option>
+            <option value="2">Tahap 2 - Asas</option>
+            <option value="3">Tahap 3 - Kompeten</option>
+            <option value="4">Tahap 4 - Mahir</option>
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="competency_achievement_date">
+            Tarikh Pencapaian
+        </label><br>
+
+        <input
+            type="date"
+            name="achievement_date"
+            id="competency_achievement_date"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="competency_certificate_no">
+            No. Sijil
+        </label><br>
+
+        <input
+            type="text"
+            name="certificate_no"
+            id="competency_certificate_no"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="competency_notes">
+            Catatan
+        </label><br>
+
+        <textarea
+            name="notes"
+            id="competency_notes"
+            rows="4"
+            cols="50"
+        ></textarea>
+    </div>
+
+    <br>
+
+    <button type="submit">
+        + Simpan Kompetensi
+    </button>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const disciplineSelect =
+            document.getElementById('competency_discipline');
+
+        const competencySelect =
+            document.getElementById('competency_master_id');
+
+        if (!disciplineSelect || !competencySelect) {
+            return;
+        }
+
+        const allOptions = Array.from(
+            competencySelect.querySelectorAll(
+                'option[data-discipline]'
+            )
+        );
+
+        function filterCompetencies() {
+            const selectedDiscipline = disciplineSelect.value;
+
+            competencySelect.value = '';
+
+            allOptions.forEach(function (option) {
+                option.hidden =
+                    selectedDiscipline !== ''
+                    && option.dataset.discipline !== selectedDiscipline;
+            });
+        }
+
+        disciplineSelect.addEventListener(
+            'change',
+            filterCompetencies
+        );
+    });
+</script>
+
+<hr>
+
+
+<h3>Pengalaman Kerja</h3>
+
+
+<h4>Ringkasan / Ranking Pengalaman</h4>
+
+@if ($experienceRanking->count())
+    <table border="1" cellpadding="8" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Ranking</th>
+                <th>Kategori Bidang Utama</th>
+                <th>Jumlah Tempoh</th>
+                <th>Bil. Rekod</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach ($experienceRanking as $index => $rank)
+                @php
+                    $totalDays = (int) $rank['total_days'];
+                    $years = intdiv($totalDays, 365);
+                    $remainingDays = $totalDays % 365;
+                    $months = intdiv($remainingDays, 30);
+                    $days = $remainingDays % 30;
+                @endphp
+
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $rank['category'] }}</td>
+
+                    <td>
+                        {{ $years }} Tahun
+                        {{ $months }} Bulan
+                        {{ $days }} Hari
+                    </td>
+
+                    <td>{{ $rank['record_count'] }}</td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <p>Belum ada ringkasan pengalaman.</p>
+@endif
+
+<br>
+
+
+@php
+    $sortedWorkExperiences = $staff->workExperiences
+        ->map(function ($item) {
+            $start = $item->start_date;
+            $end = $item->end_date ?? now();
+
+            $item->duration_days = $start
+                ? $start->diffInDays($end)
+                : 0;
+
+            return $item;
+        })
+        ->sortByDesc('duration_days')
+        ->values();
+@endphp
+
+@if ($sortedWorkExperiences->count())
+    <table border="1" cellpadding="10" cellspacing="0">
+        <thead>
+            <tr>
+                <th>Jenis Bidang</th>
+                <th>Kategori Bidang Utama</th>
+                <th>Kategori Sistem Utama</th>
+                <th>Sistem / Sub-Bidang</th>
+                <th>Kementerian / Jabatan</th>
+                <th>Lokasi / Bahagian</th>
+                <th>Tarikh Mula</th>
+                <th>Tarikh Tamat</th>
+                <th>Tempoh</th>
+                <th>Catatan</th>
+                <th>Tindakan</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach ($sortedWorkExperiences as $experience)
+                @php
+                    $startDate = $experience->start_date;
+                    $endDate = $experience->end_date ?? now();
+
+                    $duration = $startDate
+                        ? $startDate->diff($endDate)
+                        : null;
+
+                    $displayFieldType =
+                        $experience->field_type
+                        ?? $experience->experienceMaster?->field_type
+                        ?? '-';
+
+                    $displayMainCategory =
+                        $experience->mainCategory?->name
+                        ?? $experience->other_main_category
+                        ?? '-';
+
+                    $displaySystemCategory =
+                        $experience->system_category
+                        ?? $experience->other_system_category
+                        ?? $experience->experienceMaster?->main_system_category
+                        ?? '-';
+
+                    $displaySubField =
+                        $experience->experienceMaster?->sub_field
+                        ?? $experience->other_sub_field
+                        ?? $experience->other_experience
+                        ?? '-';
+                @endphp
+
+                <tr>
+                    <td>{{ $displayFieldType }}</td>
+                    <td>{{ $displayMainCategory }}</td>
+                    <td>{{ $displaySystemCategory }}</td>
+                    <td>{{ $displaySubField }}</td>
+
+                    <td>{{ $experience->ministry_department ?? '-' }}</td>
+                    <td>{{ $experience->location_division ?? '-' }}</td>
+
+                    <td>
+                        {{ $experience->start_date?->format('d/m/Y') ?? '-' }}
+                    </td>
+
+                    <td>
+                        {{
+                            $experience->end_date
+                            ? $experience->end_date->format('d/m/Y')
+                            : 'Semasa'
+                        }}
+                    </td>
+
+                    <td>
+                        @if ($duration)
+                            {{ $duration->y }} Tahun
+                            {{ $duration->m }} Bulan
+                            {{ $duration->d }} Hari
+                        @else
+                            -
+                        @endif
+                    </td>
+
+                    <td>{{ $experience->notes ?? '-' }}</td>
+
+                    <td>
+                        <a href="{{ route('staff.work-experiences.edit', [$staff, $experience]) }}">
+                            Edit
+                        </a>
+
+                        <form
+                            action="{{ route('staff.work-experiences.destroy', [$staff, $experience]) }}"
+                            method="POST"
+                            style="display:inline;"
+                            onsubmit="return confirm('Padam rekod pengalaman kerja ini?');"
+                        >
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit">Padam</button>
+                        </form>
+                    </td>
+                </tr>
+            @endforeach
+        </tbody>
+    </table>
+@else
+    <p>Tiada rekod pengalaman kerja.</p>
+@endif
+
+<br>
+
+<h4>Tambah Pengalaman Kerja</h4>
+
+<form action="{{ route('staff.work-experiences.store', $staff) }}" method="POST">
+    @csrf
+
+    <div>
+        <label for="experience_field_type">
+            Jenis Bidang
+        </label><br>
+
+        <select
+            name="field_type"
+            id="experience_field_type"
+            required
+        >
+            <option value="">-- Pilih Jenis Bidang --</option>
+
+            @foreach ($experienceMasters->pluck('field_type')->unique()->values() as $fieldType)
+                <option
+                    value="{{ $fieldType }}"
+                    {{ old('field_type') === $fieldType ? 'selected' : '' }}
+                >
+                    {{ $fieldType }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="experience_main_category_choice">
+            Kategori Bidang Utama
+        </label><br>
+
+        <select
+            id="experience_main_category_choice"
+            required
+        >
+            <option value="">-- Pilih Kategori Bidang Utama --</option>
+
+            @foreach ($experienceMainCategories as $category)
+                <option
+                    value="{{ $category->id }}"
+                    data-field-type="{{ $category->field_type }}"
+                >
+                    {{ $category->name }}
+                </option>
+            @endforeach
+
+            <option value="__other__">Lain-lain</option>
+        </select>
+
+        <input
+            type="hidden"
+            name="experience_main_category_id"
+            id="experience_main_category_id"
+            value="{{ old('experience_main_category_id') }}"
+        >
+    </div>
+
+    <div
+        id="other_main_category_wrapper"
+        style="display:none; margin-top:8px;"
+    >
+        <label for="other_main_category">
+            Nyatakan Kategori Bidang Utama
+        </label><br>
+
+        <input
+            type="text"
+            name="other_main_category"
+            id="other_main_category"
+            maxlength="255"
+            value="{{ old('other_main_category') }}"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="experience_system_category_choice">
+            Kategori Sistem Utama
+        </label><br>
+
+        <select
+            id="experience_system_category_choice"
+            required
+        >
+            <option value="">-- Pilih Kategori Sistem Utama --</option>
+        </select>
+
+        <input
+            type="hidden"
+            name="system_category"
+            id="system_category"
+            value="{{ old('system_category') }}"
+        >
+    </div>
+
+    <div
+        id="other_system_category_wrapper"
+        style="display:none; margin-top:8px;"
+    >
+        <label for="other_system_category">
+            Nyatakan Kategori Sistem Utama
+        </label><br>
+
+        <input
+            type="text"
+            name="other_system_category"
+            id="other_system_category"
+            maxlength="255"
+            value="{{ old('other_system_category') }}"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="experience_sub_field_choice">
+            Sistem / Sub-Bidang
+        </label><br>
+
+        <select
+            id="experience_sub_field_choice"
+            required
+        >
+            <option value="">-- Pilih Sistem / Sub-Bidang --</option>
+        </select>
+
+        <input
+            type="hidden"
+            name="experience_master_id"
+            id="experience_master_id"
+            value="{{ old('experience_master_id') }}"
+        >
+    </div>
+
+    <div
+        id="other_sub_field_wrapper"
+        style="display:none; margin-top:8px;"
+    >
+        <label for="other_sub_field">
+            Nyatakan Sistem / Sub-Bidang
+        </label><br>
+
+        <input
+            type="text"
+            name="other_sub_field"
+            id="other_sub_field"
+            maxlength="255"
+            value="{{ old('other_sub_field') }}"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="ministry_department">
+            Kementerian / Jabatan
+        </label><br>
+
+        <input
+            type="text"
+            name="ministry_department"
+            id="ministry_department"
+            value="{{ old('ministry_department') }}"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="location_division">
+            Lokasi / Bahagian
+        </label><br>
+
+        <input
+            type="text"
+            name="location_division"
+            id="location_division"
+            value="{{ old('location_division') }}"
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="work_start_date">
+            Tarikh Mula Penglibatan
+        </label><br>
+
+        <input
+            type="date"
+            name="start_date"
+            id="work_start_date"
+            value="{{ old('start_date') }}"
+            required
+        >
+    </div>
+
+    <br>
+
+    <div>
+        <label for="work_end_date">
+            Tarikh Tamat Penglibatan
+        </label><br>
+
+        <input
+            type="date"
+            name="end_date"
+            id="work_end_date"
+            value="{{ old('end_date') }}"
+        >
+
+        <br>
+        <small>
+            Biarkan kosong jika pengalaman masih berjalan.
+        </small>
+    </div>
+
+    <br>
+
+    <div>
+        <label for="work_notes">
+            Catatan
+        </label><br>
+
+        <textarea
+            name="notes"
+            id="work_notes"
+            rows="4"
+            cols="50"
+        >{{ old('notes') }}</textarea>
+    </div>
+
+    <br>
+
+    <button type="submit">
+        + Simpan Pengalaman Kerja
+    </button>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const fieldTypeSelect =
+        document.getElementById('experience_field_type');
+
+    const mainChoice =
+        document.getElementById(
+            'experience_main_category_choice'
+        );
+
+    const mainId =
+        document.getElementById(
+            'experience_main_category_id'
+        );
+
+    const otherMainWrapper =
+        document.getElementById(
+            'other_main_category_wrapper'
+        );
+
+    const otherMainInput =
+        document.getElementById('other_main_category');
+
+    const systemChoice =
+        document.getElementById(
+            'experience_system_category_choice'
+        );
+
+    const systemValue =
+        document.getElementById('system_category');
+
+    const otherSystemWrapper =
+        document.getElementById(
+            'other_system_category_wrapper'
+        );
+
+    const otherSystemInput =
+        document.getElementById('other_system_category');
+
+    const subChoice =
+        document.getElementById(
+            'experience_sub_field_choice'
+        );
+
+    const masterId =
+        document.getElementById('experience_master_id');
+
+    const otherSubWrapper =
+        document.getElementById(
+            'other_sub_field_wrapper'
+        );
+
+    const otherSubInput =
+        document.getElementById('other_sub_field');
+
+    const allMainOptions = Array.from(
+        mainChoice.querySelectorAll(
+            'option[data-field-type]'
+        )
+    );
+
+    @php
+        $experienceMasterJsData = $experienceMasters
+            ->map(function ($master) {
+                return [
+                    'id' => $master->id,
+                    'field_type' => $master->field_type,
+                    'system_category' =>
+                        $master->main_system_category,
+                    'sub_field' =>
+                        $master->sub_field
+                        ?? $master->main_system_category,
+                ];
+            })
+            ->values();
+    @endphp
+
+    const masterData = @json($experienceMasterJsData);
+
+    function unique(values) {
+        return [...new Set(values.filter(Boolean))];
+    }
+
+    function clearSelect(select, placeholder) {
+        select.innerHTML =
+            `<option value="">${placeholder}</option>`;
+    }
+
+    function addOtherOption(select) {
+        const option = document.createElement('option');
+        option.value = '__other__';
+        option.textContent = 'Lain-lain';
+        select.appendChild(option);
+    }
+
+    function setManual(wrapper, input, enabled) {
+        wrapper.style.display =
+            enabled ? 'block' : 'none';
+
+        input.required = enabled;
+
+        if (!enabled) {
+            input.value = '';
+        }
+    }
+
+    function loadMainCategories() {
+        const fieldType = fieldTypeSelect.value;
+
+        mainChoice.value = '';
+        mainId.value = '';
+        setManual(
+            otherMainWrapper,
+            otherMainInput,
+            false
+        );
+
+        allMainOptions.forEach(function (option) {
+            option.hidden =
+                !fieldType
+                || option.dataset.fieldType !== fieldType;
+        });
+
+        loadSystemCategories();
+    }
+
+    function handleMainCategory() {
+        if (mainChoice.value === '__other__') {
+            mainId.value = '';
+            setManual(
+                otherMainWrapper,
+                otherMainInput,
+                true
+            );
+        } else {
+            mainId.value = mainChoice.value;
+            setManual(
+                otherMainWrapper,
+                otherMainInput,
+                false
+            );
+        }
+    }
+
+    function loadSystemCategories() {
+        const fieldType = fieldTypeSelect.value;
+
+        clearSelect(
+            systemChoice,
+            '-- Pilih Kategori Sistem Utama --'
+        );
+
+        systemValue.value = '';
+        setManual(
+            otherSystemWrapper,
+            otherSystemInput,
+            false
+        );
+
+        if (fieldType) {
+            unique(
+                masterData
+                    .filter(
+                        item =>
+                            item.field_type === fieldType
+                    )
+                    .map(
+                        item => item.system_category
+                    )
+            ).forEach(function (value) {
+                const option =
+                    document.createElement('option');
+
+                option.value = value;
+                option.textContent = value;
+
+                systemChoice.appendChild(option);
+            });
+
+            addOtherOption(systemChoice);
+        }
+
+        loadSubFields();
+    }
+
+    function handleSystemCategory() {
+        if (systemChoice.value === '__other__') {
+            systemValue.value = '';
+
+            setManual(
+                otherSystemWrapper,
+                otherSystemInput,
+                true
+            );
+        } else {
+            systemValue.value = systemChoice.value;
+
+            setManual(
+                otherSystemWrapper,
+                otherSystemInput,
+                false
+            );
+        }
+
+        loadSubFields();
+    }
+
+    function loadSubFields() {
+        const fieldType = fieldTypeSelect.value;
+        const selectedSystem = systemChoice.value;
+
+        clearSelect(
+            subChoice,
+            '-- Pilih Sistem / Sub-Bidang --'
+        );
+
+        masterId.value = '';
+
+        setManual(
+            otherSubWrapper,
+            otherSubInput,
+            false
+        );
+
+        if (!fieldType || !selectedSystem) {
+            return;
+        }
+
+        if (selectedSystem !== '__other__') {
+            masterData
+                .filter(
+                    item =>
+                        item.field_type === fieldType
+                        && item.system_category ===
+                            selectedSystem
+                )
+                .forEach(function (item) {
+                    const option =
+                        document.createElement('option');
+
+                    option.value = item.id;
+                    option.textContent = item.sub_field;
+
+                    subChoice.appendChild(option);
+                });
+        }
+
+        addOtherOption(subChoice);
+    }
+
+    function handleSubField() {
+        if (subChoice.value === '__other__') {
+            masterId.value = '';
+
+            setManual(
+                otherSubWrapper,
+                otherSubInput,
+                true
+            );
+        } else {
+            masterId.value = subChoice.value;
+
+            setManual(
+                otherSubWrapper,
+                otherSubInput,
+                false
+            );
+        }
+    }
+
+    fieldTypeSelect.addEventListener(
+        'change',
+        loadMainCategories
+    );
+
+    mainChoice.addEventListener(
+        'change',
+        handleMainCategory
+    );
+
+    systemChoice.addEventListener(
+        'change',
+        handleSystemCategory
+    );
+
+    subChoice.addEventListener(
+        'change',
+        handleSubField
+    );
+
+    if (fieldTypeSelect.value) {
+        loadMainCategories();
+    }
+});
+</script>
+
+<hr>
+
 <h3>Penempatan Semasa</h3>
 
 @if ($currentPlacement)

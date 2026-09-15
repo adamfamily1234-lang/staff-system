@@ -22,6 +22,8 @@ class DatabaseSeeder extends Seeder
             CompetencyMasterSeeder::class,
 
             StaffSeeder::class,
+            ExperienceMasterSeeder::class,
+            ExperienceMainCategorySeeder::class,
         ]);
     }
 }

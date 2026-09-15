@@ -117,4 +117,11 @@ public function competencies(): HasMany
 {
     return $this->hasMany(StaffCompetency::class);
 }
+/**
+     * Rekod Pengalaman staf.
+     */
+public function workExperiences(): HasMany
+{
+    return $this->hasMany(StaffWorkExperience::class);
+}
 }

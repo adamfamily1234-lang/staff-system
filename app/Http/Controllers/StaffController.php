@@ -12,7 +12,11 @@ use App\Models\GradeMaster;
 use App\Models\PositionMaster;
 use App\Models\PlacementTypeMaster;
 use App\Models\Unit;
+use App\Models\CompetencyMaster;
+use App\Models\ExperienceMaster;
+use App\Models\ExperienceMainCategory;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class StaffController extends Controller
 {
@@ -659,6 +663,9 @@ public function show(Staff $staff)
         'courses.mainCategory',
         'courses.subCategory',
         'awards',
+        'competencies.competency',
+        'workExperiences.experienceMaster',
+        'workExperiences.mainCategory',
         'placements.grade',
         'placements.position',
         'placements.placementType',
@@ -675,6 +682,23 @@ public function show(Staff $staff)
         ->get();
 
     $courseSubCategories = CourseSubCategory::where('is_active', true)
+        ->orderBy('name')
+        ->get();
+
+    $competencyMasters = CompetencyMaster::where('is_active', true)
+        ->orderBy('discipline')
+        ->orderBy('code')
+        ->get();
+
+    $experienceMasters = ExperienceMaster::where('is_active', true)
+        ->orderBy('field_type')
+        ->orderBy('main_system_category')
+        ->orderBy('sub_field')
+        ->get();
+
+    $experienceMainCategories = ExperienceMainCategory::where('is_active', true)
+        ->orderBy('field_type')
+        ->orderBy('sort_order')
         ->orderBy('name')
         ->get();
 
@@ -735,11 +759,47 @@ public function show(Staff $staff)
 
 $currentPlacement = $staff->currentPlacement();
 
+
+    // =========================================================
+    // RINGKASAN / RANKING PENGALAMAN
+    // =========================================================
+    // Jumlahkan tempoh semua rekod mengikut Kategori Bidang Utama.
+    // Kategori manual "Lain-lain" turut dikira menggunakan teks manual.
+    $experienceRanking = $staff->workExperiences
+        ->map(function ($experience) {
+            $start = $experience->start_date;
+            $end = $experience->end_date ?? now();
+
+            $categoryName =
+                $experience->mainCategory?->name
+                ?? $experience->other_main_category
+                ?? 'Tidak Dinyatakan';
+
+            return [
+                'category' => $categoryName,
+                'days' => $start ? $start->diffInDays($end) : 0,
+            ];
+        })
+        ->groupBy('category')
+        ->map(function ($items, $category) {
+            return [
+                'category' => $category,
+                'total_days' => $items->sum('days'),
+                'record_count' => $items->count(),
+            ];
+        })
+        ->sortByDesc('total_days')
+        ->values();
+
     return view('staff.show', compact(
         'staff',
         'courseFieldTypes',
         'courseMainCategories',
         'courseSubCategories',
+        'competencyMasters',
+        'experienceMasters',
+        'experienceMainCategories',
+        'experienceRanking',
         'gradeMasters',
         'positionMasters',
         'placementTypeMasters',
@@ -1214,6 +1274,526 @@ public function storeAward(Request $request, Staff $staff)
             ->with('success', 'Rekod anugerah berjaya dipadam.');
     }
 
+
+    /**
+     * Simpan rekod kompetensi staf.
+     */
+    public function storeCompetency(Request $request, Staff $staff)
+    {
+        $validated = $request->validate([
+            'competency_master_id' => [
+                'required',
+                'exists:competency_masters,id',
+                Rule::unique('staff_competencies', 'competency_master_id')
+                    ->where(function ($query) use ($staff) {
+                        return $query->where('staff_id', $staff->id);
+                    }),
+            ],
+            'competency_level' => [
+                'required',
+                'integer',
+                'between:1,4',
+            ],
+            'achievement_date' => [
+                'nullable',
+                'date',
+            ],
+            'certificate_no' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+            'notes' => [
+                'nullable',
+                'string',
+            ],
+        ], [
+            'competency_master_id.unique' =>
+                'Kompetensi ini telah direkodkan untuk staf ini.',
+        ]);
+
+        $staff->competencies()->create($validated);
+
+        return redirect()
+            ->route('staff.show', $staff)
+            ->with('success', 'Maklumat kompetensi berjaya disimpan.');
+    }
+
+    /**
+     * Paparkan borang edit kompetensi.
+     */
+    public function editCompetency(Staff $staff, $competency)
+    {
+        $competency = $staff->competencies()
+            ->with('competency')
+            ->findOrFail($competency);
+
+        $competencyMasters = CompetencyMaster::where('is_active', true)
+            ->orderBy('discipline')
+            ->orderBy('code')
+            ->get();
+
+        return view('staff.competencies.edit', compact(
+            'staff',
+            'competency',
+            'competencyMasters'
+        ));
+    }
+
+    /**
+     * Kemaskini rekod kompetensi.
+     */
+    public function updateCompetency(
+        Request $request,
+        Staff $staff,
+        $competency
+    ) {
+        $competency = $staff->competencies()
+            ->findOrFail($competency);
+
+        $validated = $request->validate([
+            'competency_master_id' => [
+                'required',
+                'exists:competency_masters,id',
+                Rule::unique('staff_competencies', 'competency_master_id')
+                    ->where(function ($query) use ($staff) {
+                        return $query->where('staff_id', $staff->id);
+                    })
+                    ->ignore($competency->id),
+            ],
+            'competency_level' => [
+                'required',
+                'integer',
+                'between:1,4',
+            ],
+            'achievement_date' => [
+                'nullable',
+                'date',
+            ],
+            'certificate_no' => [
+                'nullable',
+                'string',
+                'max:150',
+            ],
+            'notes' => [
+                'nullable',
+                'string',
+            ],
+        ], [
+            'competency_master_id.unique' =>
+                'Kompetensi ini telah direkodkan untuk staf ini.',
+        ]);
+
+        $competency->update($validated);
+
+        return redirect()
+            ->route('staff.show', $staff)
+            ->with('success', 'Maklumat kompetensi berjaya dikemaskini.');
+    }
+
+    /**
+     * Padam rekod kompetensi.
+     */
+    public function destroyCompetency(Staff $staff, $competency)
+    {
+        $competency = $staff->competencies()
+            ->findOrFail($competency);
+
+        $competency->delete();
+
+        return redirect()
+            ->route('staff.show', $staff)
+            ->with('success', 'Rekod kompetensi berjaya dipadam.');
+    }
+
+
+
+    /**
+     * Simpan rekod pengalaman kerja staf.
+     */
+    public function storeWorkExperience(Request $request, Staff $staff)
+    {
+        $validated = $request->validate([
+            'field_type' => [
+                'required',
+                'string',
+                'max:150',
+                'exists:experience_masters,field_type',
+            ],
+
+            'experience_main_category_id' => [
+                'nullable',
+                'exists:experience_main_categories,id',
+                'required_without:other_main_category',
+            ],
+
+            'other_main_category' => [
+                'nullable',
+                'string',
+                'max:255',
+                'required_without:experience_main_category_id',
+            ],
+
+            'system_category' => [
+                'nullable',
+                'string',
+                'max:255',
+                'required_without:other_system_category',
+            ],
+
+            'other_system_category' => [
+                'nullable',
+                'string',
+                'max:255',
+                'required_without:system_category',
+            ],
+
+            'experience_master_id' => [
+                'nullable',
+                'exists:experience_masters,id',
+                'required_without:other_sub_field',
+            ],
+
+            'other_sub_field' => [
+                'nullable',
+                'string',
+                'max:255',
+                'required_without:experience_master_id',
+            ],
+
+            'ministry_department' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'location_division' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'start_date' => [
+                'required',
+                'date',
+            ],
+
+            'end_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:start_date',
+            ],
+
+            'notes' => [
+                'nullable',
+                'string',
+            ],
+        ]);
+
+        // Pastikan Kategori Bidang Utama memang milik Jenis Bidang dipilih.
+        if (!empty($validated['experience_main_category_id'])) {
+            $mainCategoryValid = ExperienceMainCategory::whereKey(
+                $validated['experience_main_category_id']
+            )
+                ->where('field_type', $validated['field_type'])
+                ->exists();
+
+            if (!$mainCategoryValid) {
+                return back()
+                    ->withErrors([
+                        'experience_main_category_id' =>
+                            'Kategori Bidang Utama tidak sepadan dengan Jenis Bidang.',
+                    ])
+                    ->withInput();
+            }
+
+            $validated['other_main_category'] = null;
+        } else {
+            $validated['experience_main_category_id'] = null;
+        }
+
+        // Jika Sistem Utama biasa dipilih, kosongkan manual.
+        if (!empty($validated['system_category'])) {
+            $systemValid = ExperienceMaster::where(
+                'field_type',
+                $validated['field_type']
+            )
+                ->where(
+                    'main_system_category',
+                    $validated['system_category']
+                )
+                ->exists();
+
+            if (!$systemValid) {
+                return back()
+                    ->withErrors([
+                        'system_category' =>
+                            'Kategori Sistem Utama tidak sepadan dengan Jenis Bidang.',
+                    ])
+                    ->withInput();
+            }
+
+            $validated['other_system_category'] = null;
+        } else {
+            $validated['system_category'] = null;
+        }
+
+        // Jika Sub-Bidang master dipilih, pastikan sepadan dengan Jenis Bidang
+        // dan Kategori Sistem Utama biasa yang dipilih.
+        if (!empty($validated['experience_master_id'])) {
+            $master = ExperienceMaster::find(
+                $validated['experience_master_id']
+            );
+
+            $masterValid = $master
+                && $master->field_type === $validated['field_type']
+                && !empty($validated['system_category'])
+                && $master->main_system_category ===
+                    $validated['system_category'];
+
+            if (!$masterValid) {
+                return back()
+                    ->withErrors([
+                        'experience_master_id' =>
+                            'Sistem / Sub-Bidang tidak sepadan dengan pilihan sebelumnya.',
+                    ])
+                    ->withInput();
+            }
+
+            $validated['other_sub_field'] = null;
+        } else {
+            $validated['experience_master_id'] = null;
+        }
+
+        // Field lama tidak digunakan untuk rekod baru.
+        $validated['other_experience'] = null;
+
+        $staff->workExperiences()->create($validated);
+
+        return redirect()
+            ->route('staff.show', $staff)
+            ->with('success', 'Pengalaman kerja berjaya disimpan.');
+    }
+
+    /**
+     * Paparkan borang edit pengalaman kerja.
+     */
+    public function editWorkExperience(Staff $staff, $workExperience)
+    {
+        $workExperience = $staff->workExperiences()
+            ->with([
+                'experienceMaster',
+                'mainCategory',
+            ])
+            ->findOrFail($workExperience);
+
+        $experienceMasters = ExperienceMaster::where('is_active', true)
+            ->orderBy('field_type')
+            ->orderBy('main_system_category')
+            ->orderBy('sub_field')
+            ->get();
+
+        $experienceMainCategories = ExperienceMainCategory::where(
+            'is_active',
+            true
+        )
+            ->orderBy('field_type')
+            ->orderBy('sort_order')
+            ->orderBy('name')
+            ->get();
+
+        return view('staff.work-experiences.edit', compact(
+            'staff',
+            'workExperience',
+            'experienceMasters',
+            'experienceMainCategories'
+        ));
+    }
+
+    /**
+     * Kemaskini pengalaman kerja.
+     */
+    public function updateWorkExperience(
+        Request $request,
+        Staff $staff,
+        $workExperience
+    ) {
+        $workExperience = $staff->workExperiences()
+            ->findOrFail($workExperience);
+
+        $validated = $request->validate([
+            'field_type' => [
+                'required',
+                'string',
+                'max:150',
+                'exists:experience_masters,field_type',
+            ],
+
+            'experience_main_category_id' => [
+                'nullable',
+                'exists:experience_main_categories,id',
+                'required_without:other_main_category',
+            ],
+
+            'other_main_category' => [
+                'nullable',
+                'string',
+                'max:255',
+                'required_without:experience_main_category_id',
+            ],
+
+            'system_category' => [
+                'nullable',
+                'string',
+                'max:255',
+                'required_without:other_system_category',
+            ],
+
+            'other_system_category' => [
+                'nullable',
+                'string',
+                'max:255',
+                'required_without:system_category',
+            ],
+
+            'experience_master_id' => [
+                'nullable',
+                'exists:experience_masters,id',
+                'required_without:other_sub_field',
+            ],
+
+            'other_sub_field' => [
+                'nullable',
+                'string',
+                'max:255',
+                'required_without:experience_master_id',
+            ],
+
+            'ministry_department' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'location_division' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+
+            'start_date' => [
+                'required',
+                'date',
+            ],
+
+            'end_date' => [
+                'nullable',
+                'date',
+                'after_or_equal:start_date',
+            ],
+
+            'notes' => [
+                'nullable',
+                'string',
+            ],
+        ]);
+
+        if (!empty($validated['experience_main_category_id'])) {
+            $mainCategoryValid = ExperienceMainCategory::whereKey(
+                $validated['experience_main_category_id']
+            )
+                ->where('field_type', $validated['field_type'])
+                ->exists();
+
+            if (!$mainCategoryValid) {
+                return back()
+                    ->withErrors([
+                        'experience_main_category_id' =>
+                            'Kategori Bidang Utama tidak sepadan dengan Jenis Bidang.',
+                    ])
+                    ->withInput();
+            }
+
+            $validated['other_main_category'] = null;
+        } else {
+            $validated['experience_main_category_id'] = null;
+        }
+
+        if (!empty($validated['system_category'])) {
+            $systemValid = ExperienceMaster::where(
+                'field_type',
+                $validated['field_type']
+            )
+                ->where(
+                    'main_system_category',
+                    $validated['system_category']
+                )
+                ->exists();
+
+            if (!$systemValid) {
+                return back()
+                    ->withErrors([
+                        'system_category' =>
+                            'Kategori Sistem Utama tidak sepadan dengan Jenis Bidang.',
+                    ])
+                    ->withInput();
+            }
+
+            $validated['other_system_category'] = null;
+        } else {
+            $validated['system_category'] = null;
+        }
+
+        if (!empty($validated['experience_master_id'])) {
+            $master = ExperienceMaster::find(
+                $validated['experience_master_id']
+            );
+
+            $masterValid = $master
+                && $master->field_type === $validated['field_type']
+                && !empty($validated['system_category'])
+                && $master->main_system_category ===
+                    $validated['system_category'];
+
+            if (!$masterValid) {
+                return back()
+                    ->withErrors([
+                        'experience_master_id' =>
+                            'Sistem / Sub-Bidang tidak sepadan dengan pilihan sebelumnya.',
+                    ])
+                    ->withInput();
+            }
+
+            $validated['other_sub_field'] = null;
+        } else {
+            $validated['experience_master_id'] = null;
+        }
+
+        $validated['other_experience'] = null;
+
+        $workExperience->update($validated);
+
+        return redirect()
+            ->route('staff.show', $staff)
+            ->with('success', 'Pengalaman kerja berjaya dikemaskini.');
+    }
+
+    /**
+     * Padam pengalaman kerja.
+     */
+    public function destroyWorkExperience(Staff $staff, $workExperience)
+    {
+        $workExperience = $staff->workExperiences()
+            ->findOrFail($workExperience);
+
+        $workExperience->delete();
+
+        return redirect()
+            ->route('staff.show', $staff)
+            ->with('success', 'Pengalaman kerja berjaya dipadam.');
+    }
+
+
     /**
      * Edit rekod penempatan / sejarah perkhidmatan.
      */
@@ -1451,6 +2031,8 @@ public function storeAward(Request $request, Staff $staff)
         $staff->skills()->delete();
         $staff->courses()->delete();
         $staff->awards()->delete();
+        $staff->competencies()->delete();
+        $staff->workExperiences()->delete();
         $staff->placements()->delete();
 
         $staff->delete();

@@ -45,6 +45,47 @@ Route::put('/staff/{staff}/placements/{placement}', [StaffController::class, 'up
 Route::delete('/staff/{staff}/placements/{placement}', [StaffController::class, 'destroyPlacement'])
     ->name('staff.placements.destroy');
 
+Route::post(
+    '/staff/{staff}/competencies',
+    [StaffController::class, 'storeCompetency']
+)->name('staff.competencies.store');
+
+Route::get(
+    '/staff/{staff}/competencies/{competency}/edit',
+    [StaffController::class, 'editCompetency']
+)->name('staff.competencies.edit');
+
+Route::put(
+    '/staff/{staff}/competencies/{competency}',
+    [StaffController::class, 'updateCompetency']
+)->name('staff.competencies.update');
+
+Route::delete(
+    '/staff/{staff}/competencies/{competency}',
+    [StaffController::class, 'destroyCompetency']
+)->name('staff.competencies.destroy');
+
+Route::post(
+    '/staff/{staff}/work-experiences',
+    [StaffController::class, 'storeWorkExperience']
+)->name('staff.work-experiences.store');
+
+Route::get(
+    '/staff/{staff}/work-experiences/{workExperience}/edit',
+    [StaffController::class, 'editWorkExperience']
+)->name('staff.work-experiences.edit');
+
+Route::put(
+    '/staff/{staff}/work-experiences/{workExperience}',
+    [StaffController::class, 'updateWorkExperience']
+)->name('staff.work-experiences.update');
+
+Route::delete(
+    '/staff/{staff}/work-experiences/{workExperience}',
+    [StaffController::class, 'destroyWorkExperience']
+)->name('staff.work-experiences.destroy');
+
+
 Route::resource('staff', StaffController::class);
 
 Route::post(
