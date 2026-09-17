@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
             CourseFieldTypeSeeder::class,
             CourseMainCategorySeeder::class,
             CourseSubCategorySeeder::class,
-            
+            ProfessionalRecognitionMasterSeeder::class,
+            HonoraryTitleMasterSeeder::class,
             CompetencyMasterSeeder::class,
 
             StaffSeeder::class,

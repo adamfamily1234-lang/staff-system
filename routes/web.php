@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\ProfessionalRecognitionController;
+use App\Http\Controllers\HonoraryTitleController;
 use App\Http\Controllers\StaffController;
 
 Route::get('/departments/{department}/units', [StaffController::class, 'unitsByDepartment'])
@@ -109,3 +111,56 @@ Route::post(
     '/staff/{staff}/placements',
     [StaffController::class, 'storePlacement']
 )->name('staff.placements.store');
+
+// PENGIKTIRAFAN PROFESIONAL
+Route::get(
+    '/staff/{staff}/professional-recognitions/create',
+    [ProfessionalRecognitionController::class, 'create']
+)->name('staff.professional-recognitions.create');
+
+Route::post(
+    '/staff/{staff}/professional-recognitions',
+    [ProfessionalRecognitionController::class, 'store']
+)->name('staff.professional-recognitions.store');
+
+Route::get(
+    '/staff/{staff}/professional-recognitions/{professionalRecognition}/edit',
+    [ProfessionalRecognitionController::class, 'edit']
+)->name('staff.professional-recognitions.edit');
+
+Route::put(
+    '/staff/{staff}/professional-recognitions/{professionalRecognition}',
+    [ProfessionalRecognitionController::class, 'update']
+)->name('staff.professional-recognitions.update');
+
+Route::delete(
+    '/staff/{staff}/professional-recognitions/{professionalRecognition}',
+    [ProfessionalRecognitionController::class, 'destroy']
+)->name('staff.professional-recognitions.destroy');
+
+
+// KURNIAAN / GELARAN KEHORMAT
+Route::get(
+    '/staff/{staff}/honorary-titles/create',
+    [HonoraryTitleController::class, 'create']
+)->name('staff.honorary-titles.create');
+
+Route::post(
+    '/staff/{staff}/honorary-titles',
+    [HonoraryTitleController::class, 'store']
+)->name('staff.honorary-titles.store');
+
+Route::get(
+    '/staff/{staff}/honorary-titles/{honoraryTitle}/edit',
+    [HonoraryTitleController::class, 'edit']
+)->name('staff.honorary-titles.edit');
+
+Route::put(
+    '/staff/{staff}/honorary-titles/{honoraryTitle}',
+    [HonoraryTitleController::class, 'update']
+)->name('staff.honorary-titles.update');
+
+Route::delete(
+    '/staff/{staff}/honorary-titles/{honoraryTitle}',
+    [HonoraryTitleController::class, 'destroy']
+)->name('staff.honorary-titles.destroy');

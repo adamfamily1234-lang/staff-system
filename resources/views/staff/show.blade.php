@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>Profil Staf - {{ $staff->name }}</title>
+    <title>Profil Staf - {{ $staff->display_name }}</title>
 </head>
 
 <body>
@@ -30,7 +30,7 @@
 
         <tr>
             <th>Nama</th>
-            <td>{{ $staff->name }}</td>
+           <td>{{ $staff->display_name }}</td>
         </tr>
 
         <tr>
@@ -1829,7 +1829,9 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 <hr>
+@include('staff.partials.professional-recognitions', ['staff' => $staff])
 
+@include('staff.partials.honorary-titles', ['staff' => $staff])
 <h3>Penempatan Semasa</h3>
 
 @if ($currentPlacement)

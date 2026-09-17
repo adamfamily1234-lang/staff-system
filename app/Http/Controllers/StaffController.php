@@ -671,6 +671,8 @@ public function show(Staff $staff)
         'placements.placementType',
         'placements.department',
         'placements.unit',
+        'professionalRecognitions.master',
+        'honoraryTitles.master',
     ]);
 
     $courseFieldTypes = CourseFieldType::where('is_active', true)

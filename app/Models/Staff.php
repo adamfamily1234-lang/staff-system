@@ -4,9 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Concerns\HasFormattedStaffName;
 
 class Staff extends Model
 {
+   
+    use HasFormattedStaffName;
+
+    
+
     protected $fillable = [
         'name',
         'ic_no',
@@ -55,6 +61,7 @@ class Staff extends Model
             'former_police_military' => 'boolean',
         ];
     }
+
 
         /**
      * Rekod perkhidmatan staf.
@@ -123,5 +130,17 @@ public function competencies(): HasMany
 public function workExperiences(): HasMany
 {
     return $this->hasMany(StaffWorkExperience::class);
+}
+/**
+     * Rekod Pengiktirafan Profesional dan Gelaran Kehormat staf.
+     */
+public function professionalRecognitions(): HasMany
+{
+    return $this->hasMany(StaffProfessionalRecognition::class);
+}
+
+public function honoraryTitles(): HasMany
+{
+    return $this->hasMany(StaffHonoraryTitle::class);
 }
 }
