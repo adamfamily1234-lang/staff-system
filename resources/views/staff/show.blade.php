@@ -39,16 +39,6 @@
         </tr>
 
         <tr>
-            <th>Gelaran (di pangkal nama)</th>
-            <td>{{ $staff->prefix_title ?? '-' }}</td>
-        </tr>
-
-        <tr>
-            <th>Gelaran (di hujung nama)</th>
-            <td>{{ $staff->suffix_title ?? '-' }}</td>
-        </tr>
-
-        <tr>
             <th>Jantina</th>
             <td>{{ $staff->gender ?? '-' }}</td>
         </tr>
