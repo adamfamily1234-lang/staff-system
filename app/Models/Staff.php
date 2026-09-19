@@ -87,6 +87,15 @@ class Staff extends Model
         return $this->hasMany(StaffSkill::class);
     }
 
+     /**
+     * Rekod kemahiran staf structured.
+     */
+    public function structuredSkills(): HasMany
+    {
+    return $this->hasMany(StaffStructuredSkill::class);
+    }
+
+
     /**
      * Rekod Kursus staf.
      */

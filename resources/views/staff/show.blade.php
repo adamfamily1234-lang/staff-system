@@ -1825,6 +1825,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 @include('staff.partials.professional-contributions', ['staff' => $staff])
 
+@include('staff.partials.structured-skills', ['staff' => $staff])
+
 <h3>Penempatan Semasa</h3>
 
 @if ($currentPlacement)
@@ -2295,6 +2297,14 @@ document.addEventListener('DOMContentLoaded', function () {
         + Simpan Penempatan
     </button>
 </form>
+
+@can('manage-structured-skills')
+    <p>
+        <a href="{{ route('staff.structured-skills-admin.index', $staff) }}">
+            Urus Structured Skills (Admin/Penyelia)
+        </a>
+    </p>
+@endcan
 
 
 <script>

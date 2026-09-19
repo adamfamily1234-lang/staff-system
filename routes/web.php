@@ -2,10 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\StructuredSkillController;
 use App\Http\Controllers\ProfessionalContributionController;
 use App\Http\Controllers\ProfessionalRecognitionController;
 use App\Http\Controllers\HonoraryTitleController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\StructuredSkillAdminController;
 
 Route::get('/departments/{department}/units', [StaffController::class, 'unitsByDepartment'])
     ->name('departments.units');
@@ -180,3 +183,88 @@ Route::put('/staff/{staff}/professional-contributions/{professionalContribution}
 
 Route::delete('/staff/{staff}/professional-contributions/{professionalContribution}', [ProfessionalContributionController::class, 'destroy'])
     ->name('staff.professional-contributions.destroy');
+
+    Route::get(
+    '/staff/{staff}/structured-skills/create',
+    [StructuredSkillController::class, 'create']
+)->name('staff.structured-skills.create');
+
+Route::post(
+    '/staff/{staff}/structured-skills',
+    [StructuredSkillController::class, 'store']
+)->name('staff.structured-skills.store');
+
+Route::get(
+    '/staff/{staff}/structured-skills/{structuredSkill}/edit',
+    [StructuredSkillController::class, 'edit']
+)->name('staff.structured-skills.edit');
+
+Route::put(
+    '/staff/{staff}/structured-skills/{structuredSkill}',
+    [StructuredSkillController::class, 'update']
+)->name('staff.structured-skills.update');
+
+Route::delete(
+    '/staff/{staff}/structured-skills/{structuredSkill}',
+    [StructuredSkillController::class, 'destroy']
+)->name('staff.structured-skills.destroy');
+
+
+Route::middleware([
+    'auth',
+    'can:manage-structured-skills',
+])->group(function () {
+
+    Route::get(
+        '/staff/{staff}/structured-skills-admin',
+        [StructuredSkillAdminController::class, 'index']
+    )->name('staff.structured-skills-admin.index');
+
+    Route::get(
+        '/staff/{staff}/structured-skills-admin/create',
+        [StructuredSkillAdminController::class, 'create']
+    )->name('staff.structured-skills-admin.create');
+
+    Route::post(
+        '/staff/{staff}/structured-skills-admin',
+        [StructuredSkillAdminController::class, 'store']
+    )->name('staff.structured-skills-admin.store');
+
+    Route::get(
+        '/staff/{staff}/structured-skills/{structuredSkill}/verify',
+        [StructuredSkillAdminController::class, 'verifyForm']
+    )->name('staff.structured-skills-admin.verify-form');
+
+    Route::patch(
+        '/staff/{staff}/structured-skills/{structuredSkill}/verify',
+        [StructuredSkillAdminController::class, 'verify']
+    )->name('staff.structured-skills-admin.verify');
+
+    Route::get(
+        '/staff/{staff}/structured-skills-admin/{structuredSkill}/edit',
+        [StructuredSkillAdminController::class, 'edit']
+    )->name('staff.structured-skills-admin.edit');
+
+    Route::put(
+        '/staff/{staff}/structured-skills-admin/{structuredSkill}',
+        [StructuredSkillAdminController::class, 'update']
+    )->name('staff.structured-skills-admin.update');
+
+    Route::delete(
+        '/staff/{staff}/structured-skills-admin/{structuredSkill}',
+        [StructuredSkillAdminController::class, 'destroy']
+    )->name('staff.structured-skills-admin.destroy');
+});
+
+
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [LoginController::class, 'create'])
+        ->name('login');
+
+    Route::post('/login', [LoginController::class, 'store'])
+        ->name('login.store');
+});
+
+Route::post('/logout', [LoginController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('logout');

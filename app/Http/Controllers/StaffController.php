@@ -674,6 +674,12 @@ public function show(Staff $staff)
         'professionalRecognitions.master',
         'honoraryTitles.master',
         'professionalContributions',
+        'structuredSkills' => function ($query) {
+    $query
+        ->where('visibility_scope', 'staff_visible')
+        ->with('skill.category.cluster');
+},
+
     ]);
 
     $courseFieldTypes = CourseFieldType::where('is_active', true)

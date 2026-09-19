@@ -215,5 +215,17 @@
 
 @endif
 
+
+@auth
+    <div>
+        Log masuk sebagai: {{ auth()->user()->name }}
+
+        <form method="POST" action="{{ route('logout') }}" style="display:inline;">
+            @csrf
+            <button type="submit">Log Keluar</button>
+        </form>
+    </div>
+@endauth
+
 </body>
 </html>
