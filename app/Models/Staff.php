@@ -143,4 +143,11 @@ public function honoraryTitles(): HasMany
 {
     return $this->hasMany(StaffHonoraryTitle::class);
 }
+/**
+     * Rekod Sumbangan/Penglibatan Profesional staf.
+     */
+public function professionalContributions(): HasMany
+{
+    return $this->hasMany(StaffProfessionalContribution::class);
+}
 }

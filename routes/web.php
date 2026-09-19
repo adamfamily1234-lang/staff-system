@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\ProfessionalContributionController;
 use App\Http\Controllers\ProfessionalRecognitionController;
 use App\Http\Controllers\HonoraryTitleController;
 use App\Http\Controllers\StaffController;
@@ -164,3 +165,18 @@ Route::delete(
     '/staff/{staff}/honorary-titles/{honoraryTitle}',
     [HonoraryTitleController::class, 'destroy']
 )->name('staff.honorary-titles.destroy');
+
+Route::get('/staff/{staff}/professional-contributions/create', [ProfessionalContributionController::class, 'create'])
+    ->name('staff.professional-contributions.create');
+
+Route::post('/staff/{staff}/professional-contributions', [ProfessionalContributionController::class, 'store'])
+    ->name('staff.professional-contributions.store');
+
+Route::get('/staff/{staff}/professional-contributions/{professionalContribution}/edit', [ProfessionalContributionController::class, 'edit'])
+    ->name('staff.professional-contributions.edit');
+
+Route::put('/staff/{staff}/professional-contributions/{professionalContribution}', [ProfessionalContributionController::class, 'update'])
+    ->name('staff.professional-contributions.update');
+
+Route::delete('/staff/{staff}/professional-contributions/{professionalContribution}', [ProfessionalContributionController::class, 'destroy'])
+    ->name('staff.professional-contributions.destroy');

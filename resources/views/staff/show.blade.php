@@ -1822,6 +1822,9 @@ document.addEventListener('DOMContentLoaded', function () {
 @include('staff.partials.professional-recognitions', ['staff' => $staff])
 
 @include('staff.partials.honorary-titles', ['staff' => $staff])
+
+@include('staff.partials.professional-contributions', ['staff' => $staff])
+
 <h3>Penempatan Semasa</h3>
 
 @if ($currentPlacement)
